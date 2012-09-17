@@ -1,0 +1,99 @@
+{% extends 'default.html' %}
+
+{% block content %}
+<style>
+		#query_form {
+			margin-top:20px;
+		}
+
+		#query_form #query {
+			max-width:100%;
+			min-width:100%;
+			width:100%;
+			height:125px;
+		}
+
+		#history .query_row {
+			cursor:pointer;
+		}
+
+		#history h2 {
+			text-align:center;
+		}
+	</style>
+	<div id="wrapper">
+		<div id="query_form" class="form-horizontal">
+			<div class="control-group">
+				<textarea id="query" placeholder="Query..."></textarea>
+			</div>
+			<div class="control-group" id="execute_container">
+				<label class="checkbox">
+					<input type="checkbox" id="email" value="1" />Email on Completion
+				</label>
+				<label class="checkbox">
+					<input type="checkbox" id="public" value="1" />Make Public
+				</label>
+			</div>
+			<div class="control-group">
+				<input type='text' id='name' placeholder="Name (Optional)" size=50 value='' />
+				<div style='clear:both;'></div>
+			</div>
+			<div class="control-group">
+				<button id="execute" class="btn btn-primary" >Execute</button>
+			</div>
+		</div>
+		<div id="history">
+			<h2>Query History</h2>
+			<table class="table table-striped table-bordered table-hover">
+				<tr>
+					<th>ID</th>
+					<th>Status</th>
+					<th>Name</th>
+					<th>Query</th>
+					<th>Created On</th>
+				</tr>
+				{% for query in queries %}
+				<tr class="query_row" data-query-id="{{ query.id }}">
+					<td><p>{{ query.id }}</p></td>
+					{% if query.is_successful %}
+					<td><p class="text-success">Success</p></td>
+					{% else %}
+						{% if query.is_complete %}
+							<td><p class="text-error">Failed</p></td>
+						{% else %}
+							<td><p class="text-info">Pending</p></td>
+						{% endif %}
+					{% endif %}
+					<td><p>{{ query.name|default:"No Name" }}</p></td>
+					<td><p>{{ query.query }}</p></td>
+					<td><p>{{ query.created_on }}</p></td>
+				</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+	<script>
+		$("#execute").click(function(){
+			var options = {
+				query: $("#query").val(),
+				name: $("#name").val()
+			};
+
+			if ($("#public").is(":checked"))
+				options['is_public'] = true;
+
+			if ($("#email").is(":checked"))
+				options['email_on_complete'] = true;
+
+
+			$.get('/ajax/query', options, function(err, succ){
+				top.location.reload()
+			});
+		})
+
+		$(".query_row").click(function(){
+			top.location.href = '/query/' + $(this).data('queryId');
+		})
+
+	</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>{% block title %}Hive Manager{% endblock %}</title>
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+		<script src="/static/js/bootstrap.js"></script>
+		<script src="http://underscorejs.org/underscore-min.js"></script>
+
+		<script src="http://backbonejs.org/backbone-min.js"></script>
+		<script src="https://raw.github.com/andyet/ICanHaz.js/master/ICanHaz.min.js"></script>
+
+		<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css" />
+	</head>
+
+	<body style="position:relative; padding-top:40px">
+		<div class="navbar navbar-inverse navbar-fixed-top">
+			<div class="navbar-inner">
+				<div class="container">
+					<ul class="nav">
+						<li><a href="/">Home</a></li>
+						<li><a href="/public">Public Queries</a></li>
+						<li><a href="/saved">My Saved Queries</a></li>
+					</ul>
+					<ul class="nav pull-right">
+						<li><a href="/logout">Log Out</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="row">
+				<div id="content" class="span12">
+					{% block content %}{% endblock %}
+				</div>
+			</div>
+		</div>
+
+		<script>
+			function csrfSafeMethod(method) {
+				// these HTTP methods do not require CSRF protection
+				return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+			}
+
+			$.ajaxSetup({
+				crossDomain: false, // obviates need for sameOrigin test
+				beforeSend: function(xhr, settings) {
+					var csrftoken = $("#csrftoken").val();
+					if (!csrfSafeMethod(settings.type)) {
+						var csrftoken = $.cookie('csrftoken');
+						xhr.setRequestHeader("X-CSRFToken", csrftoken);
+					}
+				}
+			});
+			
+		</script>
+
+
+	</body>
+</html>

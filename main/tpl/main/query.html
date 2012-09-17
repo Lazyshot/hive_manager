@@ -1,0 +1,135 @@
+{% extends "default.html" %}
+
+
+{% block content %}
+<div style="margin-top:20px;">
+	<div class="">
+		<button id="save" class="btn btn-primary {% if query.is_saved %}active{% endif %}" data-toggle="button">Save</button>
+		<button id="delete" class="btn">Delete</button>
+	</div>
+	<h2>Status</h2>
+	<p>{{ query.is_complete }}</p>
+	<h2>Query</h2>
+	<p>{{ query.query }}</p>
+	<h2>Error Message</h2>
+	<p>{{ query.error_msg }}</p>
+	<h2>Created Date</h2>
+	<p>{{ query.created_on }}</p>
+	{% if query.is_complete and query.results != '' %}
+	<h2>Sample</h2>
+	<p><a href="/query/{{ query.id }}/downloads">Full Results</a></p>
+	<div>
+		<table class="table table-striped">
+			{% for line in sample_data %}
+			<tr>
+				{% for col in line %}
+				<td>{{ col }}</td>
+				{% endfor %}
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+	{% endif %}
+
+	<div id="comments_container">
+		<h3>Comments</h3>
+		<div class="list">
+		</div>
+	</div>
+
+</div>
+
+<script id="comment" type="text/html">
+	<div class="comment">
+		<h4>{{ user_name }}</h4>
+		<p><small>{{ date }}</small></p>
+		<p>
+			{{ message }}
+		</p>
+	</div>
+</script>
+
+<script id="new_comment" type="text/html">
+	<div id="new_comment" class="form-horizontal">
+		<div class="control-group">
+			<textarea id="comment_message" placeholder="Comment"></textarea>
+		</div>
+		<div class="control-group">
+			<button type="button" class="btn">Submit</button>
+		</div>
+	</div>
+
+</script>
+
+
+
+
+<script type="text/javascript">
+	$(document).ready(function(){
+
+		var Query = Backbone.Model.extend({
+			url: "/ajax/query"
+		});
+		
+		var q = new Query({{ query.to_json|safe }});
+
+		
+		
+		var Comments = Backbone.Collection.extend({
+			initialize: function(opts)
+			{
+				this.qid = opts.qid;
+			},
+			url: function(){
+				return '/ajax/comments/' + this.qid;
+			}
+		})
+
+		var CommentsView = Backbone.View.extend({
+			render: function(){
+				var self = this;
+
+				this.collection.each(function(model){
+					var vals = {
+						user_name: model.get('user').name,
+						date: model.get('created_on'),
+						message: model.get('message')
+					};
+
+					var comm = ich.comment(vals);
+
+					$(self.el).append(comm)
+				});
+
+				var ncomm = ich.new_comment();
+
+				$(self.el).append(ncomm);
+			}
+		});
+
+		var comments = new Comments({
+			qid: {{ query.pk }}
+		});
+
+		var CV = new CommentsView({
+			el: "#comments_container .list",
+			collection: comments
+		});
+
+		comments.fetch({success: function(){
+			CV.render()
+		}});
+	
+		$("#save").click(function(){
+			var is_saved = q.get('is_saved');
+
+			is_saved = is_saved == true ? false : true;
+			q.set('is_saved', is_saved);
+			q.save();
+		})
+
+
+	})
+</script>
+
+{% endblock %}

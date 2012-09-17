@@ -1,0 +1,43 @@
+{% extends 'default.html' %}
+
+
+{% block content %}
+<style>
+
+	.query_row {
+		cursor:pointer;
+	}
+</style>
+
+<div>
+	<h2>Public Queries</h2>
+	<table class="table table-striped table-bordered table-hover">
+		<tr>
+			<th>ID</th>
+			<th>Status</th>
+			<th>Name</th>
+			<th>Query</th>
+			<th>Created On</th>
+		</tr>
+		{% for query in queries %}
+		<tr class="query_row" data-query-id="{{ query.id }}">
+			<td><p>{{ query.id }}</p></td>
+			{% if query.is_successful %}
+			<td><p class="text-success">Success</p></td>
+			{% else %}
+			<td><p class="text-error">Failed</p></td>
+			{% endif %}
+			<td><p>{{ query.name|default:"No Name" }}</p></td>
+			<td><p>{{ query.query }}</p></td>
+			<td><p>{{ query.created_on }}</p></td>
+		</tr>
+		{% endfor %}
+	</table>
+</div>
+
+<script>
+		$(".query_row").click(function(){
+			top.location.href = '/query/' + $(this).data('queryId');
+		})
+</script>
+{% endblock %}
