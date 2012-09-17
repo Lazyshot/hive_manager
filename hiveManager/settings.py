@@ -119,7 +119,8 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
     'djangotasks',
-    'main'
+    'main',
+    'gunicorn'
 )
 
 # A sample logging configuration. The only tangible logging
@@ -151,4 +152,4 @@ LOGGING = {
     }
 }
 
-DJANGOTASK_DAEMON_THREAD = True
+DJANGOTASK_DAEMON_THREAD = False

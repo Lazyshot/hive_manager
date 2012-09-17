@@ -1,13 +1,6 @@
 Django==1.4
-Jinja2==2.6
 Markdown==2.2.0
-PyYAML==3.10
-Werkzeug==0.8.3
-billiard==2.7.3.12
-cloud==2.5.5
-distribute==0.6.28
 django-celery==3.0.9
-dulwich==0.8.5
 ls-thrift-py-hadoop==1-cdh3u2
 pymongo==2.2.1
 requests==0.13.8
@@ -15,3 +8,4 @@ wsgiref==0.1.2
 zope.interface==4.0.1
 psycopg2==2.4.5
 dj-database-url==0.2.0
+gunicorn==0.14.6
