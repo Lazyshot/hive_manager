@@ -9,6 +9,7 @@ import json
 import sys
 import time
 import csv
+import os
 
 
 class Query(models.Model):
@@ -65,7 +66,7 @@ class Query(models.Model):
 
 
         try:
-            transport = TSocket.TSocket('skyfire.louddev.com', 10000)
+            transport = TSocket.TSocket(os.getenv('HIVE_SERVER'), 10000)
             transport = TTransport.TBufferedTransport(transport)
             protocol = TBinaryProtocol.TBinaryProtocol(transport)
 
