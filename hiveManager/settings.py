@@ -153,3 +153,6 @@ LOGGING = {
 }
 
 DJANGOTASK_DAEMON_THREAD = False
+TASKS_LOG_FILE = 'django-tasks.log'
+
+
