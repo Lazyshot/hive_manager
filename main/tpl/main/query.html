@@ -2,21 +2,51 @@
 
 
 {% block content %}
-<div style="margin-top:20px;">
-	<div class="">
+<style>
+	#query_name_input {display:none;font-size: 30px;line-height: 40px;height:auto;width:100%}
+	#comments_container {width:500px;}
+	.comment { border-bottom: 1px solid #333; }
+	#comment_message { width:100% }
+	#new_comment { margin-top:10px; }
+</style>
+
+
+<div style="margin-top:20px;" id="query_container">
+	<div id="query_name">
+		<h2>{{ query.name|default:"No Name" }}</h2>
+		<input type="text" name="query_name" id="query_name_input">
+	</div>
+	<p><small>{{ query.created_on }}</small></p>
+	<pre class="sh_sql">{{ query.query }}</pre>
+	<div class="control-group">
 		<button id="save" class="btn btn-primary {% if query.is_saved %}active{% endif %}" data-toggle="button">Save</button>
+		<button id="publish" class="btn btn-primary {% if query.is_public %}active{% endif %}" data-toggle="button">Publish</button>
 		<button id="delete" class="btn">Delete</button>
 	</div>
-	<h2>Status</h2>
-	<p>{{ query.is_complete }}</p>
-	<h2>Query</h2>
-	<p>{{ query.query }}</p>
-	<h2>Error Message</h2>
-	<p>{{ query.error_msg }}</p>
-	<h2>Created Date</h2>
-	<p>{{ query.created_on }}</p>
-	{% if query.is_complete and query.results != '' %}
-	<h2>Sample</h2>
+	<h2>Run Information</h2>
+	<dl class="dl-horizontal">
+		<dt>Status</dt>
+		<dd>
+			{% if query.is_successful %}
+				<p class="text-success">Success</p></td>
+			{% else %}
+				{% if query.is_complete %}
+					<p class="text-error">Failed</p></td>
+				{% else %}
+					<p class="text-info">Pending</p></td>
+				{% endif %}
+			{% endif %}
+		</dd>
+
+
+		{% if query.is_complete and not query.is_successful %}
+		<dt>Error Message</dt>
+		<dd>{{ query.error_msg }}</dd>
+		{% endif %}
+	</dl>
+
+	{% if query.is_complete and query.results != '' and query.is_successful %}
+	<h2>Results</h2>
 	<p><a href="/query/{{ query.id }}/download">Full Results</a></p>
 	<div>
 		<table class="table table-striped">
@@ -31,6 +61,7 @@
 	</div>
 	{% endif %}
 
+
 	<div id="comments_container">
 		<h3>Comments</h3>
 		<div class="list">
@@ -41,10 +72,15 @@
 
 <script id="comment" type="text/html">
 	<div class="comment">
-		<h4>{{ user_name }}</h4>
-		<p><small>{{ date }}</small></p>
+		<h4>
+			{% templatetag openvariable %} user_name {% templatetag closevariable %}
+		</h4>
+
+		<p><small>
+			{% templatetag openvariable %} date {% templatetag closevariable %}
+		</small></p>
 		<p>
-			{{ message }}
+			{% templatetag openvariable %} message {% templatetag closevariable %}
 		</p>
 	</div>
 </script>
@@ -55,7 +91,7 @@
 			<textarea id="comment_message" placeholder="Comment"></textarea>
 		</div>
 		<div class="control-group">
-			<button type="button" class="btn">Submit</button>
+			<button type="button" id="add_comment" class="btn">Submit</button>
 		</div>
 	</div>
 
@@ -73,11 +109,12 @@
 				return "/ajax/query/" + this.get('id');
 			}
 		});
-		
-		var q = new Query({{ query.to_json|safe }});
 
-		
-		
+
+		var Comment = Backbone.Model.extend({
+			url: "/ajax/comment"
+		});
+
 		var Comments = Backbone.Collection.extend({
 			initialize: function(opts)
 			{
@@ -89,12 +126,38 @@
 		})
 
 		var CommentsView = Backbone.View.extend({
+			initialize: function(){
+				var self = this;
+				
+				this.collection.fetch({success: function(){
+					self.render()
+				}});
+			},
+			events: {
+				'click #add_comment': 'addComment'
+			},
+			addComment: function(e) {
+				var self = this;
+				var cm = new Comment({
+					message: $(this.el).find("#comment_message").val(),
+					query_id: this.collection.qid,
+					created_on: new Date()
+				});
+
+				cm.save({}, {success: function(){
+					self.collection.fetch({success: function(){
+						self.render()
+					}});
+				}});
+			},
 			render: function(){
 				var self = this;
 
+				$(this.el).html("");
+
 				this.collection.each(function(model){
 					var vals = {
-						user_name: model.get('user').name,
+						user_name: model.get('user_name'),
 						date: model.get('created_on'),
 						message: model.get('message')
 					};
@@ -110,6 +173,53 @@
 			}
 		});
 
+		var QueryView = Backbone.View.extend({
+
+			events: {
+				'click #publish': "publishquery",
+				'click #save': "savequery",
+				'click #delete': 'deletequery',
+				'click #query_name': "change_name",
+				'blur #query_name_input': "save_name"
+			},
+			savequery: function(e) {
+				var is_saved = $(e.target).hasClass("active");
+				is_saved = is_saved ? false : true;
+				this.model.set('is_saved', is_saved);
+				this.model.save();
+			},
+			publishquery: function(e) {
+				var is_public = $(e.target).hasClass("active");
+				is_public = is_public ? false : true;
+				this.model.set('is_public', is_public);
+				this.model.save();
+			},
+			change_name: function(e) {
+				$(this.el).find("#query_name h2").toggle(false);
+				var n = $(this.el).find("#query_name_input");
+				n.toggle(true);
+				n.val(this.model.get('name'));
+				n.focus();
+			},
+			deletequery: function(e) {
+				this.model.set('is_deleted', true);
+				this.model.save();
+				history.go(-1);
+			},
+			save_name: function(e){
+				var name = $(e.target).val();
+
+				if (name != "") {
+					$(this.el).find("#query_name h2").html(name)
+					this.model.set('name', name);
+					this.model.save();
+				}
+
+				$(this.el).find("#query_name h2").toggle(true);
+				$(this.el).find("#query_name_input").toggle(false);
+			}
+		});
+
 		var comments = new Comments({
 			qid: {{ query.pk }}
 		});
@@ -119,19 +229,12 @@
 			collection: comments
 		});
 
-		comments.fetch({success: function(){
-			CV.render()
-		}});
-	
-		$("#save").click(function(){
-			var is_saved = q.get('is_saved');
+		var q = new Query({{ query.to_json|safe }});
 
-			is_saved = is_saved == true ? false : true;
-			q.set('is_saved', is_saved);
-			q.save();
-		})
-
-
+		var qv = new QueryView({
+			el: "#query_container",
+			model: q
+		});
 	})
 </script>
 

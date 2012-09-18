@@ -11,7 +11,7 @@ import json
 
 def index(request):
 	if request.user.is_authenticated():
-		queries = request.user.query_set.all().order_by('-created_on')
+		queries = request.user.query_set.all().filter(is_deleted=False).order_by('-created_on')
 		return render_to_response('main/index.html', {'queries': queries})
 	else:
 		c = {}
@@ -36,7 +36,7 @@ def saved(request, offset=0):
 		limit = request.session['page_limit']
 	else:
 		limit = 25
-	qs = request.user.query_set.filter(is_saved=True).order_by('-created_on')
+	qs = request.user.query_set.filter(is_saved=True, is_deleted=False).order_by('-created_on')
 	qs = qs[offset:limit]
 	return render_to_response('main/saved.html', {'queries': qs})
 
@@ -54,7 +54,7 @@ def public(request, offset=0):
 
 	limit += offset
 
-	qs = Query.objects.filter(is_public=True).order_by('-created_on')
+	qs = Query.objects.filter(is_public=True, is_deleted=False).order_by('-created_on')
 	qs = qs[offset:limit]
 	return render_to_response('main/public.html', {'queries': qs})
 
@@ -65,10 +65,7 @@ def ajax_query(request, qid=None):
 			query = request.user.query_set.create(**request.GET.dict())
 			query.exc()
 		else:
-			g = request.GET.dict()
-			query = Query.objects.get(pk=request.GET['id'])
-			for k in g:
-				query[k] = g[k]
+			query = Query.from_json(request.body)
 			query.save()
 		response = query.to_json()
 
@@ -84,12 +81,25 @@ def ajax_queries(request):
 		qs.append(model_to_dict(query))
 	return HttpResponse(json.dumps(qs), mimetype="application/json")
 
+
+
+def ajax_comment(request):
+	comm = json.loads(request.body)
+	qid = comm['query_id']
+	del comm['query_id']
+	q = Query.objects.get(pk=qid)
+	q.comment_set.create(user=request.user, **comm)
+	return HttpResponse(request.body, mimetype="application/json")
+
 def ajax_comments(request, qid):
 	q = Query.objects.get(pk=qid)
 	comments = q.comment_set.all().order_by('created_on')
 	cs = []
 	for comment in comments:
-		cs.append(model_to_dict(comment))
+		cd = model_to_dict(comment)
+		cd['user_name'] = comment.user.username
+		cd['created_on'] = comment.created_on.strftime('%c')
+		cs.append(cd)
 	return HttpResponse(json.dumps(cs), mimetype="application/json")
 
 
@@ -97,8 +107,14 @@ def query(request, id):
 	c = {}
 	q = Query.objects.get(pk=id)
 
+	if q.is_deleted:
+		return redirect('/')
+
 	if q.is_complete:
-		s = q.get_sample()
+		try:
+			s = q.get_sample()
+		except:
+			s = []
 	else:
 		s = []
 

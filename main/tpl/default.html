@@ -10,11 +10,14 @@
 
 		<script src="http://backbonejs.org/backbone-min.js"></script>
 		<script src="https://raw.github.com/andyet/ICanHaz.js/master/ICanHaz.min.js"></script>
+		<script src="http://shjs.sourceforge.net/sh_main.min.js"></script>
+		<script src="/static/js/sh_sql.js"></script>
 
 		<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css" />
+		<link rel="stylesheet" type="text/css" href="http://shjs.sourceforge.net/css/sh_ide-codewarrior.min.css" />
 	</head>
 
-	<body style="position:relative; padding-top:40px">
+	<body style="position:relative; padding-top:40px" onload="sh_highlightDocument();">
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="navbar-inner">
 				<div class="container">

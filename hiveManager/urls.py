@@ -19,6 +19,9 @@ urlpatterns = patterns('',
 	url(r'^ajax/query/(?P<qid>\d{1,4})/?$', 'main.views.ajax_query', name='create_query'),
 	url(r'^ajax/query/?$', 'main.views.ajax_query', name='create_query'),
 	url(r'^ajax/queries/?$', 'main.views.ajax_queries', name='get_queries'),
+
+    url(r'^ajax/comment$', 'main.views.ajax_comment', name='save_comment'),
+
 	url(r'^ajax/comments/(?P<qid>\d{1,4})/?$', 'main.views.ajax_comments', name='get_comments'),
 
 	url(r'^query/(?P<id>\d{1,4})/?$', 'main.views.query', name='view_query'),

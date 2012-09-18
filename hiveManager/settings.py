@@ -3,7 +3,7 @@
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-BASE_DIR = '/opt/hive_manager/'
+BASE_DIR = ''
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -158,4 +158,4 @@ LOGGING = {
     }
 }
 
-DJANGOTASK_DAEMON_THREAD = False
+DJANGOTASK_DAEMON_THREAD = True
