@@ -106,7 +106,7 @@ ROOT_URLCONF = 'hiveManager.urls'
 WSGI_APPLICATION = 'hiveManager.wsgi.application'
 
 TEMPLATE_DIRS = (
-    "main/tpl"
+    "/opt/hive_manager/main/tpl"
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
 )
