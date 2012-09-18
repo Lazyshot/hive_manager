@@ -68,7 +68,10 @@
 	$(document).ready(function(){
 
 		var Query = Backbone.Model.extend({
-			url: "/ajax/query"
+			url: function()
+			{
+				return "/ajax/query/" + this.get('id');
+			}
 		});
 		
 		var q = new Query({{ query.to_json|safe }});
