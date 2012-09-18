@@ -2,7 +2,7 @@
 
 {% block content %}
 	<div>
-		<p>{{ error }}</p>
+		<p class="text-error" style="text-align:center;">{{ error }}</p>
 		<form action="" method="POST" class="form-horizontal">
 			{% csrf_token %}
 			<div class="control-group">
