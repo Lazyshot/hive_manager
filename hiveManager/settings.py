@@ -3,6 +3,8 @@
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+BASE_DIR = '/opt/hive_manager/'
+
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
@@ -12,7 +14,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'data',                      # Or path to database file if using sqlite3.
+        'NAME': BASE_DIR + 'data',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -106,7 +108,7 @@ ROOT_URLCONF = 'hiveManager.urls'
 WSGI_APPLICATION = 'hiveManager.wsgi.application'
 
 TEMPLATE_DIRS = (
-    "/opt/hive_manager/main/tpl"
+    BASE_DIR + "main/tpl"
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
 )
