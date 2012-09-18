@@ -14,6 +14,11 @@ framework.
 
 """
 import os
+import sys
+
+path = '/opt/hive_manager'
+if path not in sys.path:
+    sys.path.append(path)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hiveManager.settings")
 
