@@ -22,10 +22,14 @@
 		{% for query in queries %}
 		<tr class="query_row" data-query-id="{{ query.id }}">
 			<td><p>{{ query.id }}</p></td>
-			{% if query.is_successful %}
+			{% if query.status == query.SUCCESS %}
 			<td><p class="text-success">Success</p></td>
 			{% else %}
-			<td><p class="text-error">Failed</p></td>
+				{% if query.status == query.FAILED %}
+					<td><p class="text-error">Failed</p></td>
+				{% else %}
+				<td><p class="text-info">{{ query.status }}</p></td>
+				{% endif %}
 			{% endif %}
 			<td><p>{{ query.name|default:"No Name" }}</p></td>
 			<td><p>{{ query.query }}</p></td>

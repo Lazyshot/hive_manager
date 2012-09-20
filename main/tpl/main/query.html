@@ -27,13 +27,13 @@
 	<dl class="dl-horizontal">
 		<dt>Status</dt>
 		<dd>
-			{% if query.is_successful %}
-				<p class="text-success">Success</p></td>
+			{% if query.status == query.SUCCESS %}
+			<p class="text-success">Success</p>
 			{% else %}
-				{% if query.is_complete %}
-					<p class="text-error">Failed</p></td>
+				{% if query.status == query.FAILED %}
+					<p class="text-error">Failed</p>
 				{% else %}
-					<p class="text-info">Pending</p></td>
+					<p class="text-info">{{ query.status }}</p>
 				{% endif %}
 			{% endif %}
 		</dd>

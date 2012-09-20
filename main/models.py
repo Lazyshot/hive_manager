@@ -21,8 +21,19 @@ class Query(models.Model):
 	error_msg = models.CharField(max_length=500,blank=True)
 	results = models.CharField(max_length=400,blank=True)
 
-	is_complete = models.BooleanField(default=False)
-	is_successful = models.NullBooleanField()
+	PENDING = 'pending'
+	WRITING = 'writing'
+	SUCCESS = 'completed_success'
+	FAILED = 'completed_failed'
+
+	StatusChoices = (
+		(PENDING, 'Pending'),
+		(WRITING, 'Writing To Disk'),
+		(SUCCESS, 'Success'),
+		(FAILED, 'Failed')
+	)
+
+	status = models.CharField(max_length=200,choices=StatusChoices, default=PENDING)
 	is_saved = models.BooleanField(default=False)
 	is_public = models.BooleanField(default=False)
 	is_deleted = models.BooleanField(default=False)
@@ -87,6 +98,9 @@ class Query(models.Model):
 
 			client.execute(self.query)
 
+			self.status = self.WRITING
+			self.save()
+
 			self.results = '/tmp/hive_results/' + str(self.pk) + str(int(time.time())) + '.csv'
 
 			rfile = open(self.results, 'w')
@@ -101,20 +115,24 @@ class Query(models.Model):
 			print columns
 			wr.writerow(columns)
 
-			while (1):
-				row = client.fetchOne()
-				if row == None:
+			limit = 10000
+
+			while True:
+				rows = client.fetchN(limit)
+				if len(rows) < 1:
 					break
-				wr.writerow(row.split("\t"))
+				for row in rows:
+					wr.writerow(row.split("\t"))
+
 
 			rfile.close()
 		except HiveServerException, e:
 			self.error_msg = e
 
 			if e.errorCode == 0:
-				self.is_successful = True
+				self.status = self.SUCCESS
 			else:
-				self.is_successful = False
+				self.status = self.FAILED
 
 			print '%s' % (e.message)
 		except Thrift.TException, tx:
@@ -125,14 +143,13 @@ class Query(models.Model):
 		except:
 			self.error_msg = sys.exc_info()[0]
 
-		self.is_complete = True
 		self.save()
 		if self.email_on_complete:
 			send_mail("Query finished: " + self.pk,
 				"The query has finished. Go here for details: <a href='#'></a>",
 				"no-reply@louddev.com",
 				[self.user.email],
-				fail_silently=True)
+				fail_silently=False)
 
 djangotasks.register_task(Query.run, "Execute the Hive Query")
 
