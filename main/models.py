@@ -137,11 +137,14 @@ class Query(models.Model):
 			print '%s' % (e.message)
 		except Thrift.TException, tx:
 			self.error_msg = tx
+			self.status = self.FAILED
 			print '%s' % (tx.message)
 		except TypeError, e:
 			self.error_msg = e
+			self.status = self.FAILED
 		except:
 			self.error_msg = sys.exc_info()[0]
+			self.status = self.FAILED
 
 		self.save()
 		if self.email_on_complete:

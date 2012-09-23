@@ -110,7 +110,7 @@ def query(request, id):
 	if q.is_deleted:
 		return redirect('/')
 
-	if q.is_complete:
+	if q.status == q.SUCCESS:
 		try:
 			s = q.get_sample()
 		except:
