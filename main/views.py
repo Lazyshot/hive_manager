@@ -136,5 +136,5 @@ def download_results(request, id):
 
 	r = HttpResponse(rf, mimetype=mime_type_guess[0])
 
-    r['Content-Length'] = os.path.getsize(q.results)
-    return r
+	r['Content-Length'] = os.path.getsize(q.results)
+	return r
