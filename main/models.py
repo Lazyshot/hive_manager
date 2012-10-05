@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.core.mail import  EmailMessage
 from django.forms.models import model_to_dict
 
 import main.tasks as tasks
@@ -148,11 +148,14 @@ class Query(models.Model):
 
 		self.save()
 		if self.email_on_complete:
-			send_mail("Query finished: " + str(self.pk),
-					"The query has finished. Go here for details: <a href='http://hive.louddev.com/query/" + str(self.pk) + "/'>Query</a>",
-				"no-reply@louddev.com",
-				[self.user.email],
-				fail_silently=False)
+			subject = "Query finished: " + str(self.pk)
+			html_content = "The query has finished. Go here for details: <a href='http://hive.louddev.com/query/" + str(self.pk) + "/'>Query</a>"
+			from_email = "HiveManager <no-reply@louddev.com>"
+			to = self.user.email
+
+			msg = EmailMessage(subject, html_content, from_email, [to])
+			msg.content_subtype = "html"  # Main content is now text/html
+			msg.send()
 
 class Comment(models.Model):
 	user = models.ForeignKey(User)
