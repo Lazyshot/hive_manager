@@ -124,6 +124,8 @@ class Query(models.Model):
 
 
 			rfile.close()
+
+			self.status = self.SUCCESS
 		except HiveServerException, e:
 			self.error_msg = e
 
