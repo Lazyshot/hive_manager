@@ -74,7 +74,7 @@ class Query(models.Model):
 		return q
 
 	def exc(self):
-		tasks.run(self.pk)
+		tasks.run.delay(self)
 
 	def run(self):
 		##Thrift Imports
