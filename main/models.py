@@ -3,8 +3,7 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.forms.models import model_to_dict
 
-
-import djangotasks
+import main.tasks as tasks
 import json
 import sys
 import time
@@ -75,8 +74,7 @@ class Query(models.Model):
 		return q
 
 	def exc(self):
-		task = djangotasks.task_for_object(self.run)
-		djangotasks.run_task(task)
+		tasks.run(self.pk)
 
 	def run(self):
 		##Thrift Imports
@@ -153,8 +151,6 @@ class Query(models.Model):
 				"no-reply@louddev.com",
 				[self.user.email],
 				fail_silently=False)
-
-djangotasks.register_task(Query.run, "Execute the Hive Query")
 
 class Comment(models.Model):
 	user = models.ForeignKey(User)

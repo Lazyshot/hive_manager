@@ -125,7 +125,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
-    'djangotasks',
+    'djcelery',
     'main'
 )
 
@@ -158,4 +158,8 @@ LOGGING = {
     }
 }
 
-DJANGOTASK_DAEMON_THREAD = True
+import djcelery
+
+djcelery.setup_loader()
+
+BROKER_URL = 'amqp://guest:guest@smokescreen.louddev.com:5672/'

@@ -134,4 +134,7 @@ def download_results(request, id):
 	mime_type_guess = mimetypes.guess_type(os.path.basename(q.results))
 	rf = open(q.results, 'r')
 
-	return HttpResponse(rf, mimetype=mime_type_guess[0])
+	r = HttpResponse(rf, mimetype=mime_type_guess[0])
+
+    r['Content-Length'] = os.path.getsize(q.results)
+    return r

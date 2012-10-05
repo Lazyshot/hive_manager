@@ -16,6 +16,10 @@ framework.
 import os
 import sys
 
+import djcelery
+djcelery.setup_loader()
+
+
 path = '/opt/hive_manager'
 if path not in sys.path:
     sys.path.append(path)
