@@ -148,8 +148,8 @@ class Query(models.Model):
 
 		self.save()
 		if self.email_on_complete:
-			send_mail("Query finished: " + self.pk,
-				"The query has finished. Go here for details: <a href='#'></a>",
+			send_mail("Query finished: " + str(self.pk),
+					"The query has finished. Go here for details: <a href='http://hive.louddev.com/query/" + str(self.pk) + "/'>Query</a>",
 				"no-reply@louddev.com",
 				[self.user.email],
 				fail_silently=False)
