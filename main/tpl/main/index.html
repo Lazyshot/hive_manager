@@ -77,8 +77,12 @@
 				options['email_on_complete'] = true;
 
 
-			$.get('/ajax/query', options, function(err, succ){
-				top.location.reload()
+			$.get('/ajax/query', options, function(data){
+				var qid = data.id;
+				if (qid)
+					top.location.href = '/query/' + qid;
+				else
+					top.location.reload()
 			});
 		})
 
