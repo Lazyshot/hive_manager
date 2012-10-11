@@ -71,7 +71,15 @@ class Query(models.Model):
 
 		for k in d:
 			setattr(q, k, d[k])
-		return q
+		return
+
+	def refresh_from_db(self):
+		"""Refreshes this instance from db
+		https://code.djangoproject.com/ticket/901
+		"""
+		from_db = self.__class__.objects.get(pk=self.pk)
+		for field in self.__class__._meta.fields:
+			setattr(self, field.name, getattr(from_db, field.name))
 
 	def exc(self):
 		tasks.run.delay(self)
@@ -95,6 +103,8 @@ class Query(models.Model):
 			transport.open()
 
 			client.execute(self.query)
+
+			self.refresh_from_db()
 
 			self.status = self.WRITING
 			self.save()
@@ -122,6 +132,7 @@ class Query(models.Model):
 				for row in rows:
 					wr.writerow(row.split("\t"))
 
+			self.refresh_from_db()
 
 			rfile.close()
 
@@ -140,8 +151,11 @@ class Query(models.Model):
 			self.status = self.FAILED
 			print '%s' % (tx.message)
 		except TypeError, e:
-			self.error_msg = e
-			self.status = self.FAILED
+			if self.query.count("INSERT") > 0 or self.query.count("CREATE") > 0 :
+				self.status = self.SUCCESS
+			else:
+				self.error_msg = e
+				self.status = self.FAILED
 		except:
 			self.error_msg = sys.exc_info()[0]
 			self.status = self.FAILED
