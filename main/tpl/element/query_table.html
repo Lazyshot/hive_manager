@@ -25,3 +25,11 @@
 	{% endfor %}
 </table>
 
+<script>
+
+	$(".query_row").click(function(){
+		top.location.href = '/query/' + $(this).data('queryId');
+	});
+
+</script>
+

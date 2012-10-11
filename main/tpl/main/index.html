@@ -20,9 +20,16 @@
 		#history h2 {
 			text-align:center;
 		}
+
+		#error_box {
+			display:none;
+		}
 	</style>
 	<div id="wrapper">
 		<div id="query_form" class="form-horizontal">
+			<div class="control-group">
+				<p id="error_box" class="text-error"></p>
+			</div>
 			<div class="control-group">
 				<textarea id="query" placeholder="Query..."></textarea>
 			</div>
@@ -54,6 +61,15 @@
 				name: $("#name").val()
 			};
 
+			if (options.query.indexOf(";") != -1)
+			{
+				$("#error_box").html("Semi-colons are create invalid syntax.");
+				$("#error_box").toggle(true);
+				return;
+			} else {
+				$("#error_box").toggle(false);
+			}
+
 			if ($("#public").is(":checked"))
 				options['is_public'] = true;
 
@@ -64,10 +80,6 @@
 			$.get('/ajax/query', options, function(err, succ){
 				top.location.reload()
 			});
-		})
-
-		$(".query_row").click(function(){
-			top.location.href = '/query/' + $(this).data('queryId');
 		})
 
 	</script>
