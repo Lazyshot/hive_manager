@@ -102,6 +102,9 @@
 
 <script type="text/javascript">
 	$(document).ready(function(){
+		setTimeout(function(){
+			top.location.reload()
+		}, 30000);
 
 		var Query = Backbone.Model.extend({
 			url: function()

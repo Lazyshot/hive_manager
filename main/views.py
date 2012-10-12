@@ -65,7 +65,15 @@ def ajax_query(request, qid=None):
 			query = request.user.query_set.create(**request.GET.dict())
 			query.exc()
 		else:
-			query = Query.from_json(request.body)
+			query = Query.objects.get(pk=qid)
+			d = json.loads(request.body)
+
+			del d['id']
+			del d['user']
+
+			for k in d:
+				setattr(d, k, d[k])
+
 			query.save()
 		response = query.to_json()
 
