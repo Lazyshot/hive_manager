@@ -4,15 +4,15 @@ from django.core.context_processors import csrf
 from django.forms.models import model_to_dict
 from django.http import HttpResponse
 
-from main.models import Query
+from main.models import QueryGroup, Query
 
 import json
 
 
 def index(request):
 	if request.user.is_authenticated():
-		queries = request.user.query_set.all().filter(is_deleted=False).order_by('-created_on')
-		return render_to_response('main/index.html', {'queries': queries})
+		groups = QueryGroup.getGroupTable(request.user)
+		return render_to_response('main/index.html', {'queries': groups, 'cur_user': True})
 	else:
 		c = {}
 		c.update(csrf(request))
@@ -30,40 +30,41 @@ def index(request):
 			return render_to_response('main/login.html', c)
 
 def saved(request, offset=0):
-	offset = int(offset)
+	qs = QueryGroup.getGroupTable(user=request.user,args={'is_saved': True, 'is_deleted': False})
+	return render_to_response('main/saved.html', {'queries': qs, 'cur_user': True})
 
-	if 'page_limit' in request.session:
-		limit = request.session['page_limit']
-	else:
-		limit = 25
-	qs = request.user.query_set.filter(is_saved=True, is_deleted=False).order_by('-created_on')
-	qs = qs[offset:limit]
-	return render_to_response('main/saved.html', {'queries': qs})
+
+def public(request, offset=0):
+	qs = QueryGroup.getGroupTable(args={'is_public': True, 'is_deleted': False})
+	return render_to_response('main/public.html', {'queries': qs})
+
 
 def logout_view(request):
 	logout(request)
 	return redirect('/')
 
-def public(request, offset=0):
-	offset = int(offset)
-
-	if 'page_limit' in request.session:
-		limit = request.session['page_limit']
-	else:
-		limit = 25
-
-	limit += offset
-
-	qs = Query.objects.filter(is_public=True, is_deleted=False).order_by('-created_on')
-	qs = qs[offset:limit]
-	return render_to_response('main/public.html', {'queries': qs})
 
 
 def ajax_query(request, qid=None):
 	if request.user.is_authenticated():
 		if qid == None:
-			query = request.user.query_set.create(**request.GET.dict())
-			query.exc()
+			get = request.GET.dict()
+			groupfields = ['name', 'is_saved', 'is_public']
+			groupopts = {}
+			for field in groupfields:
+				if field in get:
+					groupopts[field] = request.GET.dict()[field]
+			querygroup = request.user.querygroup_set.create(**groupopts)
+
+			queryfields = ['query', 'email_on_complete']
+			queryopts = {}
+			for field in queryfields:
+				if field in get:
+					queryopts[field] = get[field]
+
+			query = querygroup.query_set.create(editor=request.user,**queryopts)
+
+			#query.exc()
 		else:
 			query = Query.objects.get(pk=qid)
 			d = json.loads(request.body)
@@ -113,21 +114,13 @@ def ajax_comments(request, qid):
 
 def query(request, id):
 	c = {}
-	q = Query.objects.get(pk=id)
+	q = QueryGroup.objects.get(pk=id)
 
 	if q.is_deleted:
 		return redirect('/')
 
-	if q.status == q.SUCCESS:
-		try:
-			s = q.get_sample()
-		except:
-			s = []
-	else:
-		s = []
-
-	c['query'] = q
-	c['sample_data'] = s
+	c['query'] = q.to_dict()
+	c['query_json'] = q.to_json()
 
 	return render_to_response('main/query.html', c)
 

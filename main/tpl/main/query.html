@@ -12,54 +12,50 @@
 
 
 <div style="margin-top:20px;" id="query_container">
-	<div id="query_name">
-		<h2>{{ query.name|default:"No Name" }}</h2>
-		<input type="text" name="query_name" id="query_name_input">
+	<div class="row">
+		<div class="span9">
+			<div id="query_name">
+				<h2>{{ query.name|default:"No Name" }}</h2>
+				<input type="text" name="query_name" id="query_name_input">
+			</div>
+			<p><small>{{ query.created_on }}</small></p>
+			<p><small>by <b>{{ query.creator.name }}</b></small></p>
+			<pre id="query_text" data-revision="{{ q.queries.0.id }}" class="sh_sql">{{ query.queries.0.query }}</pre>
+		</div>
+		<div class="span3">
+			<h3>Revisions</h3>
+			<ul class="unstyled">
+			{% for q in query.queries %}
+			<li><p><a class="switch-revision" data-revision="{{ q.id }}">{{ q.created_on|date:"SHORT_DATETIME_FORMAT" }} by <b>{{ q.editor.name }}</b></a></p>
+			{% endfor %}
+			</ul>
+		</div>
 	</div>
-	<p><small>{{ query.created_on }}</small></p>
-	<pre class="sh_sql">{{ query.query }}</pre>
+
 	<div class="control-group">
+		<button id="rerun" class="btn btn-primary">Re-Run</button>
 		<button id="save" class="btn btn-primary {% if query.is_saved %}active{% endif %}" data-toggle="button">Save</button>
 		<button id="publish" class="btn btn-primary {% if query.is_public %}active{% endif %}" data-toggle="button">Publish</button>
 		<button id="delete" class="btn">Delete</button>
 	</div>
-	<h2>Run Information</h2>
-	<dl class="dl-horizontal">
-		<dt>Status</dt>
-		<dd>
-			{% if query.status == query.SUCCESS %}
-				<p class="text-success">Success</p>
-			{% else %}
-				{% if query.status == query.FAILED %}
-					<p class="text-error">Failed</p>
-				{% else %}
-					<p class="text-info">{{ query.status }}</p>
-				{% endif %}
-			{% endif %}
-		</dd>
 
-
-		{% if query.status == query.FAILED %}
-		<dt>Error Message</dt>
-		<dd>{{ query.error_msg }}</dd>
-		{% endif %}
-	</dl>
-
-	{% if query.status == query.SUCCESS and query.results != '' %}
 	<h2>Results</h2>
-	<p><a href="/query/{{ query.id }}/download">Full Results</a></p>
 	<div>
 		<table class="table table-striped">
-			{% for line in sample_data %}
-			<tr>
-				{% for col in line %}
-				<td>{{ col }}</td>
+			<thead>
+				<tr>
+					<th>Run Date</th>
+					<th>User</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for result in query.queries.0.results %}
+					<tr><td>{{ result }}</td></tr>
 				{% endfor %}
-			</tr>
-			{% endfor %}
+			</tbody>
 		</table>
 	</div>
-	{% endif %}
 
 
 	<div id="comments_container">
@@ -69,6 +65,15 @@
 	</div>
 
 </div>
+
+
+<script id="result" type="text/html">
+	<tr>
+		<td>{% templatetag openvariable %} created_on {% templatetag closevariable %}</td>
+		<td>{% templatetag openvariable %} user {% templatetag closevariable %}</td>
+		<td><a class="results" data-id="{% templatetag openvariable %} id {% templatetag closevariable %}">Results</a></td>
+	</tr>
+</script>
 
 <script id="comment" type="text/html">
 	<div class="comment">
@@ -102,17 +107,13 @@
 
 <script type="text/javascript">
 	$(document).ready(function(){
-		setTimeout(function(){
-			top.location.reload()
-		}, 30000);
 
-		var Query = Backbone.Model.extend({
+		var QueryGroup = Backbone.Model.extend({
 			url: function()
 			{
 				return "/ajax/query/" + this.get('id');
 			}
 		});
-
 
 		var Comment = Backbone.Model.extend({
 			url: "/ajax/comment"
@@ -183,7 +184,8 @@
 				'click #save': "savequery",
 				'click #delete': 'deletequery',
 				'click #query_name': "change_name",
-				'blur #query_name_input': "save_name"
+				'blur #query_name_input': "save_name",
+				'click .switch-revision': 'switch_revision'
 			},
 			savequery: function(e) {
 				var is_saved = $(e.target).hasClass("active");
@@ -220,11 +222,25 @@
 
 				$(this.el).find("#query_name h2").toggle(true);
 				$(this.el).find("#query_name_input").toggle(false);
+			},
+			switch_revision: function(e) {
+				var rid = $(e.target).data('revision');
+				var rs = this.model.get('queries');
+
+				for (var i = 0; i < rs.length; i++) {
+					if (rs[i].id == parseInt(rid))
+					{
+						$("#query_text").data('revision', rid);
+						$("#query_text").html(rs[i].query);
+						sh_highlightDocument();
+						break;
+					}
+				}
 			}
 		});
 
 		var comments = new Comments({
-			qid: {{ query.pk }}
+			qid: {{ query.id }}
 		});
 
 		var CV = new CommentsView({
@@ -232,7 +248,7 @@
 			collection: comments
 		});
 
-		var q = new Query({{ query.to_json|safe }});
+		var q = new QueryGroup({{ query_json|safe }});
 
 		var qv = new QueryView({
 			el: "#query_container",
